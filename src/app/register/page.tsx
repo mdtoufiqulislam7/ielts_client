@@ -28,7 +28,8 @@ export default function Register() {
         throw new Error('API backend URL is not configured. Please set NEXT_PUBLIC_API_BACKEND_URL in your .env file');
       }
 
-      const response = await fetch(`${apiUrl}/api/register`, {
+      const apiEndpoint = `${apiUrl}/api/register`;
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,6 +40,17 @@ export default function Register() {
           password,
         }),
       });
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(
+          `API returned non-JSON response (Status: ${response.status}). ` +
+          `URL: ${apiEndpoint}. ` +
+          `Response: ${text.substring(0, 200)}`
+        );
+      }
 
       const data = await response.json();
 

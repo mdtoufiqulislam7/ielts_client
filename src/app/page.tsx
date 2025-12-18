@@ -19,7 +19,7 @@ export default function Home() {
     if (isAuthenticated) {
       router.push('/deshboard');
     } else {
-      router.push('/login');
+      router.push('/landingpage');
     }
   }, [isAuthenticated, mounted, router]);
 

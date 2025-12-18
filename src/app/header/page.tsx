@@ -23,6 +23,12 @@ export default function Header() {
               Dashboard
             </Link>
             <Link 
+              href="/result" 
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Exam Marks
+            </Link>
+            <Link 
               href="/create-exam" 
               className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >

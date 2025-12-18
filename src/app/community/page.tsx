@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCookie } from '@/utils/cookies';
 import { useAuth } from '@/contexts/AuthContext';
+import Toast from '@/components/Toast';
 
 interface Question {
   id: string;
@@ -51,6 +52,8 @@ export default function Community() {
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
@@ -84,7 +87,11 @@ export default function Community() {
         throw new Error('You must be logged in to create an exam');
       }
 
-      const response = await fetch(`${apiUrl}/api/exams/`, {
+      const url = `${apiUrl}/api/exams/`;
+      console.log('Creating exam - URL:', url);
+      console.log('Creating exam - Headers:', getAuthHeaders());
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -92,7 +99,19 @@ export default function Community() {
         }),
       });
 
+      console.log('Create exam response status:', response.status);
+      console.log('Create exam response headers:', response.headers.get('content-type'));
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 200));
+        throw new Error(`API returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
       const data = await response.json();
+      console.log('Create exam response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to create exam');
@@ -117,9 +136,16 @@ export default function Community() {
       setStarting(true);
       setError('');
       const apiUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL;
-      if (!apiUrl) return;
+      if (!apiUrl) {
+        console.error('API URL not configured');
+        return;
+      }
 
-      const response = await fetch(`${apiUrl}/api/exams/start`, {
+      const url = `${apiUrl}/api/exams/start`;
+      console.log('Starting exam - URL:', url);
+      console.log('Starting exam - Exam ID:', examId);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -127,7 +153,18 @@ export default function Community() {
         }),
       });
 
+      console.log('Start exam response status:', response.status);
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 200));
+        throw new Error(`API returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
       const data = await response.json();
+      console.log('Start exam response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to start exam');
@@ -163,9 +200,16 @@ export default function Community() {
       setError('');
       setSuccess('');
       const apiUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL;
-      if (!apiUrl) return;
+      if (!apiUrl) {
+        console.error('API URL not configured');
+        return;
+      }
 
-      const response = await fetch(`${apiUrl}/api/exams/submit-answer`, {
+      const url = `${apiUrl}/api/exams/submit-answer`;
+      console.log('Submitting answer - URL:', url);
+      console.log('Submitting answer - Question ID:', questionId);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -175,12 +219,27 @@ export default function Community() {
         }),
       });
 
+      console.log('Submit answer response status:', response.status);
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 200));
+        throw new Error(`API returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
       const data = await response.json();
+      console.log('Submit answer response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to submit answer');
       }
 
+      // Show toast notification
+      setToastMessage('Exam question submitted successfully!');
+      setShowToast(true);
+      
       setSuccess('Answer submitted successfully!');
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
@@ -201,9 +260,16 @@ export default function Community() {
       setCompleting(true);
       setError('');
       const apiUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL;
-      if (!apiUrl) return;
+      if (!apiUrl) {
+        console.error('API URL not configured');
+        return;
+      }
 
-      const response = await fetch(`${apiUrl}/api/exams/complete`, {
+      const url = `${apiUrl}/api/exams/complete`;
+      console.log('Completing exam - URL:', url);
+      console.log('Completing exam - User Exam ID:', userExamId);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -211,7 +277,18 @@ export default function Community() {
         }),
       });
 
+      console.log('Complete exam response status:', response.status);
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 200));
+        throw new Error(`API returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
       const data = await response.json();
+      console.log('Complete exam response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to complete exam');
@@ -252,6 +329,15 @@ export default function Community() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type="success"
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+      />
+      
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">

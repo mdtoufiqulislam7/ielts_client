@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Public routes that don't require authentication
-const publicRoutes = ['/login', '/register', '/'];
+const publicRoutes = ['/login', '/register', '/', '/landingpage'];
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -21,6 +21,7 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     if (!mounted) return;
 
     const isPublicRoute = publicRoutes.includes(pathname);
+    const isAuthRoute = pathname === '/login' || pathname === '/register';
 
     // If not authenticated and trying to access protected route
     if (!isAuthenticated && !isPublicRoute) {
@@ -28,7 +29,8 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     }
     
     // If authenticated and trying to access login/register, redirect to dashboard
-    if (isAuthenticated && isPublicRoute) {
+    // (but allow access to landingpage even when authenticated)
+    if (isAuthenticated && isAuthRoute) {
       router.push('/deshboard');
     }
   }, [isAuthenticated, pathname, mounted, router]);
@@ -45,8 +47,9 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
   }
 
   // If authenticated and on login/register, don't render children
-  // (will redirect to dashboard)
-  if (isAuthenticated && publicRoutes.includes(pathname)) {
+  // (will redirect to dashboard, but allow landingpage)
+  const isAuthRoute = pathname === '/login' || pathname === '/register';
+  if (isAuthenticated && isAuthRoute) {
     return null;
   }
 
